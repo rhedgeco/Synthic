@@ -20,7 +20,7 @@ public class SimpleSineGenerator : MonoBehaviour
             // get total sample progress
             long totalSamples = _currentSample + sample / channels;
 
-            // convert sample progress into a phase in the frequency
+            // convert sample progress into a phase based on frequency
             float phase = totalSamples * frequency / _sampleRate % 1;
 
             // get value of phase on a sine wave
@@ -34,6 +34,8 @@ public class SimpleSineGenerator : MonoBehaviour
         }
 
         // increase sample progress for next iteration
+        // this needs to be divided by channels the channels variable to account
+        // for the fact that all channels are represented in the same buffer
         _currentSample += data.Length / channels;
     }
 }
