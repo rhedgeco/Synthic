@@ -1,17 +1,20 @@
 using System;
 
-public class NativeDisposer<T> where T: unmanaged, IDisposable
+namespace Synthic.Native
 {
-    public T Object;
-
-    public static explicit operator T(NativeDisposer<T> disposer)
+    public class NativeDisposer<T> where T: unmanaged, IDisposable
     {
-        return disposer.Object;
-    }
+        public T Object;
 
-    // Destructor will make sure that the object is disposed when garbage collected
-    ~NativeDisposer()
-    {
-        Object.Dispose();
+        public static explicit operator T(NativeDisposer<T> disposer)
+        {
+            return disposer.Object;
+        }
+
+        // Destructor will make sure that the object is disposed when garbage collected
+        ~NativeDisposer()
+        {
+            Object.Dispose();
+        }
     }
 }

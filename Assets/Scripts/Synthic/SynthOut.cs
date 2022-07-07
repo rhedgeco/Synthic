@@ -1,11 +1,14 @@
 using UnityEngine;
 
-public class SynthOut : MonoBehaviour
+namespace Synthic
 {
-    [SerializeField] private SynthProvider provider;
-    
-    private void OnAudioFilterRead(float[] data, int channels)
+    public class SynthOut : MonoBehaviour
     {
-        provider.FillBuffer(data, channels);
+        [SerializeField] private SynthProvider provider;
+    
+        private void OnAudioFilterRead(float[] data, int channels)
+        {
+            provider.FillBuffer(data, channels);
+        }
     }
 }

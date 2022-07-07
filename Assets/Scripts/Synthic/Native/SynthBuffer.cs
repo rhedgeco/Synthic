@@ -1,22 +1,25 @@
 using System;
 using System.Runtime.InteropServices;
 
-[StructLayout(LayoutKind.Sequential)]
-public struct SynthBuffer : IDisposable
+namespace Synthic.Native
 {
-    public int Channels { get; }
-    public int ChannelLength { get; }
-    public BufferHandler<float> Handler { get; }
-
-    public SynthBuffer(int bufferLength, int channels)
+    [StructLayout(LayoutKind.Sequential)]
+    public struct SynthBuffer : IDisposable
     {
-        Channels = channels;
-        ChannelLength = bufferLength / channels;
-        Handler = new BufferHandler<float>(bufferLength);
-    }
+        public int Channels { get; }
+        public int ChannelLength { get; }
+        public BufferHandler<float> Handler { get; }
 
-    public void Dispose()
-    {
-        Handler.Dispose();
+        public SynthBuffer(int bufferLength, int channels)
+        {
+            Channels = channels;
+            ChannelLength = bufferLength / channels;
+            Handler = new BufferHandler<float>(bufferLength);
+        }
+
+        public void Dispose()
+        {
+            Handler.Dispose();
+        }
     }
 }
