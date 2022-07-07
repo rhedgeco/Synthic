@@ -12,23 +12,23 @@ namespace Synthic
         {
             EnsureBufferAllocated(buffer.Length, channels);
             ProcessBuffer(ref _buffer.Object);
-            _buffer.Object.Handler.CopyTo(buffer);
+            _buffer.Object.CopyTo(buffer);
         }
     
         // processes and fills a native buffer with sound data
         public void FillBuffer(ref SynthBuffer buffer)
         {
-            if (!buffer.Handler.Allocated) return;
-            EnsureBufferAllocated(buffer.Handler.Length, buffer.Channels);
+            if (!buffer.Allocated) return;
+            EnsureBufferAllocated(buffer.Length, buffer.Channels);
             ProcessBuffer(ref _buffer.Object);
-            _buffer.Object.Handler.CopyTo(buffer.Handler);
+            _buffer.Object.CopyTo(ref buffer);
         }
     
         // ensures that our cached buffer has the same properties as the incoming buffer
         private void EnsureBufferAllocated(int bufferLength, int channels)
         {
-            if (_buffer.Object.Handler.Length == bufferLength && _buffer.Object.Channels == channels) return;
-            if (_buffer.Object.Handler.Allocated) _buffer.Object.Dispose();
+            if (_buffer.Object.Length == bufferLength && _buffer.Object.Channels == channels) return;
+            if (_buffer.Object.Allocated) _buffer.Object.Dispose();
             _buffer.Object = new SynthBuffer(bufferLength, channels);
         }
 

@@ -34,7 +34,7 @@ namespace Synthic.Generators
         private static unsafe long BurstSine(ref SynthBuffer buffer,
             long currentSample, int sampleRate, float amplitude, float frequency)
         {
-            for (int sample = 0; sample < buffer.Handler.Length; sample += buffer.Channels)
+            for (int sample = 0; sample < buffer.Length; sample += buffer.Channels)
             {
                 // get total sample progress
                 long totalSamples = currentSample + sample / buffer.Channels;
@@ -47,9 +47,7 @@ namespace Synthic.Generators
             
                 for (int channel = 0; channel < buffer.Channels; channel++)
                 {
-                    // use pointers here for fast application of values
-                    long pointerOffset = (sample + channel) * sizeof(float);
-                    *(float*) ((long) buffer.Handler.Pointer + pointerOffset) = value;
+                    buffer[sample + channel] = value;
                 }
             }
 

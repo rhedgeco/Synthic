@@ -18,7 +18,22 @@ namespace Synthic.Native
             Pointer = (T*) UnsafeUtility.Malloc(Length * sizeof(T), 
                 UnsafeUtility.AlignOf<T>(), Allocator.Persistent);
         }
-    
+
+        public T this[int index]
+        {
+            get
+            {
+                CheckAndThrow(index);
+                return *(T*) ((long) Pointer + index * sizeof(T));
+            }
+            
+            set
+            {
+                CheckAndThrow(index);
+                *(T*) ((long) Pointer + index * sizeof(T)) = value;
+            }
+        }
+
         public void CopyTo(T[] managedArray)
         {
             if (!Allocated) throw new ObjectDisposedException("Cannot copy. Buffer has been disposed");
@@ -41,6 +56,13 @@ namespace Synthic.Native
             if (!Allocated) return;
             UnsafeUtility.Free(Pointer, Allocator.Persistent);
             Pointer = (T*) IntPtr.Zero;
+        }
+
+        private void CheckAndThrow(int index)
+        {
+            if (!Allocated) throw new ObjectDisposedException("Buffer is disposed");
+            if (index >= Length || index < 0)
+                throw new IndexOutOfRangeException($"index:{index} out of range:0-{Length}");
         }
     }
 }
