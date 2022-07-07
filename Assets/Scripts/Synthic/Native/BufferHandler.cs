@@ -19,6 +19,7 @@ namespace Synthic.Native
                 UnsafeUtility.AlignOf<T>(), Allocator.Persistent);
         }
 
+        // use pointers to access and set the data in the buffer
         public T this[int index]
         {
             get
@@ -58,6 +59,7 @@ namespace Synthic.Native
             Pointer = (T*) IntPtr.Zero;
         }
 
+        // utility method to validate an index in the buffer
         private void CheckAndThrow(int index)
         {
             if (!Allocated) throw new ObjectDisposedException("Buffer is disposed");
