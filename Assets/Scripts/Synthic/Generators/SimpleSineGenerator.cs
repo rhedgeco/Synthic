@@ -21,9 +21,12 @@ namespace Synthic.Generators
             {
                 // get total sample progress
                 long totalSamples = _currentSample + sample / channels;
+                
+                // create a divisor for converting samples to phase
+                float sampleFrequency = _sampleRate / frequency;
 
                 // convert sample progress into a phase based on frequency
-                float phase = totalSamples * frequency / _sampleRate % 1;
+                float phase = totalSamples % sampleFrequency / sampleFrequency;
 
                 // get value of phase on a sine wave
                 float value = Mathf.Sin(phase * 2 * Mathf.PI) * amplitude;
