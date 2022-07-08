@@ -152,8 +152,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 85f76897dafd4848ae271bf4dc01b95c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  amplitude: 0.5
+  oscillatorResolution: 2048
   frequency: 261.62
+  amplitude: 0.5
 --- !u!4 &27362820
 Transform:
   m_ObjectHideFlags: 0
