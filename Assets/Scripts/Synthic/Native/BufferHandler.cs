@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
@@ -15,10 +16,19 @@ namespace Synthic.Native
         public BufferHandler(int length)
         {
             Length = length;
-            Pointer = (T*) UnsafeUtility.Malloc(Length * sizeof(T),
-                UnsafeUtility.AlignOf<T>(), Allocator.Persistent);
+            Pointer = (T*) UnsafeUtility.Malloc(Length * sizeof(T), UnsafeUtility.AlignOf<T>(), Allocator.Persistent);
         }
-        
+
+        public BufferHandler(IReadOnlyCollection<T> managedArray)
+        {
+            if (managedArray == null) throw new NullReferenceException("Cannot copy. Managed array is null");
+            Length = managedArray.Count;
+            Pointer = (T*) UnsafeUtility.Malloc(Length * sizeof(T), UnsafeUtility.AlignOf<T>(), Allocator.Persistent);
+            GCHandle gcHandle = GCHandle.Alloc(managedArray, GCHandleType.Pinned);
+            UnsafeUtility.MemCpy((void*) gcHandle.AddrOfPinnedObject(), Pointer, Length * sizeof(T));
+            gcHandle.Free();
+        }
+
         public void Dispose()
         {
             if (!Allocated) return;
@@ -28,6 +38,7 @@ namespace Synthic.Native
 
         public void CopyTo(T[] managedArray)
         {
+            if (managedArray == null) throw new NullReferenceException("Cannot copy. Managed array is null");
             if (!Allocated) throw new ObjectDisposedException("Cannot copy. Buffer has been disposed");
             int length = Math.Min(managedArray.Length, Length);
             GCHandle gcHandle = GCHandle.Alloc(managedArray, GCHandleType.Pinned);
