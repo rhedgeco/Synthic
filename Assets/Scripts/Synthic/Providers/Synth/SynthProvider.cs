@@ -1,7 +1,7 @@
 using Synthic.Native;
 using UnityEngine;
 
-namespace Synthic
+namespace Synthic.Providers.Synth
 {
     public abstract class SynthProvider : MonoBehaviour
     {

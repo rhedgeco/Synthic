@@ -1,3 +1,4 @@
+using Synthic.Providers.Synth;
 using UnityEngine;
 
 namespace Synthic
