@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
@@ -17,15 +16,16 @@ namespace Synthic.Native
         {
             Length = length;
             Pointer = (T*) UnsafeUtility.Malloc(Length * sizeof(T), UnsafeUtility.AlignOf<T>(), Allocator.Persistent);
+            Clear();
         }
 
-        public BufferHandler(IReadOnlyCollection<T> managedArray)
+        public BufferHandler(T[] managedArray)
         {
             if (managedArray == null) throw new NullReferenceException("Cannot copy. Managed array is null");
-            Length = managedArray.Count;
+            Length = managedArray.Length;
             Pointer = (T*) UnsafeUtility.Malloc(Length * sizeof(T), UnsafeUtility.AlignOf<T>(), Allocator.Persistent);
             GCHandle gcHandle = GCHandle.Alloc(managedArray, GCHandleType.Pinned);
-            UnsafeUtility.MemCpy((void*) gcHandle.AddrOfPinnedObject(), Pointer, Length * sizeof(T));
+            UnsafeUtility.MemCpy(Pointer, (T*) gcHandle.AddrOfPinnedObject(), Length * sizeof(T));
             gcHandle.Free();
         }
 
@@ -42,7 +42,7 @@ namespace Synthic.Native
             if (!Allocated) throw new ObjectDisposedException("Cannot copy. Buffer has been disposed");
             int length = Math.Min(managedArray.Length, Length);
             GCHandle gcHandle = GCHandle.Alloc(managedArray, GCHandleType.Pinned);
-            UnsafeUtility.MemCpy((void*) gcHandle.AddrOfPinnedObject(), Pointer, length * sizeof(T));
+            UnsafeUtility.MemCpy((T*) gcHandle.AddrOfPinnedObject(), Pointer, length * sizeof(T));
             gcHandle.Free();
         }
 
@@ -55,18 +55,12 @@ namespace Synthic.Native
         }
 
         // use pointers to access and set the data in the buffer
-        public T this[int index]
+        public ref T this[int index]
         {
             get
             {
                 CheckAndThrow(index);
-                return *(T*) ((long) Pointer + index * sizeof(T));
-            }
-
-            set
-            {
-                CheckAndThrow(index);
-                *(T*) ((long) Pointer + index * sizeof(T)) = value;
+                return ref *(T*) ((long) Pointer + index * sizeof(T));
             }
         }
 
@@ -76,6 +70,11 @@ namespace Synthic.Native
             if (!Allocated) throw new ObjectDisposedException("Buffer is disposed");
             if (index >= Length || index < 0)
                 throw new IndexOutOfRangeException($"index:{index} out of range:0-{Length}");
+        }
+
+        public void Clear()
+        {
+            UnsafeUtility.MemClear(Pointer, (long) Length * UnsafeUtility.SizeOf<T>());
         }
     }
 }

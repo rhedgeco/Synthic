@@ -1,32 +1,38 @@
+using System.Runtime.InteropServices;
+
 namespace Synthic.Native.Midi
 {
+    [StructLayout(LayoutKind.Sequential)]
     public struct MidiNote
     {
-        private byte _status;
+        private byte _note;
 
-        public byte Pitch { get; private set; }
         public byte Velocity { get; private set; }
-        public bool Status => _status >= 0b_1001_0000;
-        public MidiChannel Channel => (MidiChannel) (_status & 0b_0000_1111);
+        public byte NoteIndex => (byte) (_note & 0b_0111_1111);
+        public Signal MidiSignal => _note >= 128 ? Signal.On : Signal.Off;
 
-        public static MidiNote On(MidiChannel channel, byte pitch, byte velocity)
+        public static MidiNote On(byte noteIndex, byte velocity)
         {
             return new MidiNote
             {
-                _status = (byte) ((byte) channel | 0b_1001_0000),
-                Pitch = (byte) (pitch & 0b_0111_1111),
-                Velocity = (byte) (velocity & 0b_0111_1111),
+                _note = (byte) (noteIndex | 0b_1000_0000),
+                Velocity = velocity,
             };
         }
         
-        public static MidiNote Off(MidiChannel channel, byte pitch, byte velocity)
+        public static MidiNote Off(byte noteIndex)
         {
             return new MidiNote
             {
-                _status = (byte) ((byte) channel | 0b_1000_0000),
-                Pitch = (byte) (pitch & 0b_0111_1111),
-                Velocity = (byte) (velocity & 0b_0111_1111),
+                _note = (byte) (noteIndex & 0b_0111_1111),
+                Velocity = 0,
             };
+        }
+
+        public enum Signal
+        {
+            Off,
+            On,
         }
     }
 }
