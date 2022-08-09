@@ -1,5 +1,8 @@
+using System.Runtime.InteropServices;
+
 namespace Synthic.Native
 {
+    [StructLayout(LayoutKind.Sequential)]
     public struct SynthBuffer : INativeObject
     { 
         private BufferHandler<float> _buffer;
