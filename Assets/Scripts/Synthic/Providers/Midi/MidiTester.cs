@@ -7,6 +7,7 @@ namespace Synthic.Providers.Midi
 {
     public class MidiTester : MidiProvider
     {
+        private object _notesLock = new object();
         private List<MidiNote> _notes = new List<MidiNote>();
 
         private void Awake()
@@ -19,20 +20,28 @@ namespace Synthic.Providers.Midi
                 if (midiDevice == null) return;
 
                 midiDevice.onWillNoteOn += (note, velocity) =>
-                    _notes.Add(MidiNote.On((byte) note.noteNumber, (byte) (127 * velocity)));
+                {
+                    lock (_notesLock) _notes.Add(MidiNote.On((byte) note.noteNumber, (byte) (127 * velocity)));
+                };
 
-                midiDevice.onWillNoteOff += note => _notes.Add(MidiNote.Off((byte) note.noteNumber));
+                midiDevice.onWillNoteOff += note =>
+                {
+                    lock (_notesLock) _notes.Add(MidiNote.Off((byte) note.noteNumber));
+                };
             };
         }
 
         protected override void ProcessBuffer(ref MidiBuffer buffer)
         {
-            buffer.Clear();
-            for (int sample = 0; sample < buffer.Length; sample++)
+            lock (_notesLock)
             {
-                if (_notes.Count == 0) continue;
-                buffer.ApplyPacket(sample, _notes.ToArray());
-                _notes.Clear();
+                buffer.Clear();
+                for (int sample = 0; sample < buffer.Length; sample++)
+                {
+                    if (_notes.Count == 0) continue;
+                    buffer.ApplyPacket(sample, _notes.ToArray());
+                    _notes.Clear();
+                }
             }
         }
     }
