@@ -1,3 +1,4 @@
+using Synthic.Data;
 using Synthic.Native;
 using Synthic.Native.Midi;
 using Synthic.Providers.Midi;
@@ -12,6 +13,7 @@ namespace Synthic.Providers.Synth
     {
         [SerializeField] private MidiProvider midiProvider;
         [SerializeField, Range(0, 1)] private float amplitude;
+        [SerializeField] private Adsr adsr;
 
         private static BurstSineDelegate _burstSine;
 
@@ -30,21 +32,23 @@ namespace Synthic.Providers.Synth
         protected override void ProcessBuffer(ref SynthBuffer buffer)
         {
             ref MidiBuffer midiBuffer = ref midiProvider.ReadBuffer(buffer.ChannelLength);
-            _burstSine(ref buffer, ref midiBuffer, ref _noteStates.Data, amplitude, _sampleRate);
+            _burstSine(ref buffer, ref midiBuffer, ref _noteStates.Data, ref adsr, amplitude, _sampleRate);
         }
 
         private delegate void BurstSineDelegate(ref SynthBuffer synthBuffer, ref MidiBuffer midiBuffer,
-            ref DataBuffer<NoteState> noteStates, float amplitude, int sampleRate);
+            ref DataBuffer<NoteState> noteStates, ref Adsr adsr, float amplitude, int sampleRate);
 
         [BurstCompile]
         private static void BurstSine(ref SynthBuffer synthBuffer, ref MidiBuffer midiBuffer,
-            ref DataBuffer<NoteState> noteStates, float amplitude, int sampleRate)
+            ref DataBuffer<NoteState> noteStates, ref Adsr adsr, float amplitude, int sampleRate)
         {
+            double sampleTime = 1.0 / sampleRate;
+            
             // loop over each sample
             for (int sample = 0; sample < synthBuffer.ChannelLength; sample++)
             {
                 float sampleValue = 0;
-                
+
                 // update note states for this iteration
                 MidiPacket packet = midiBuffer.GetPacket(sample);
                 for (int noteIndex = 0; packet.Allocated & noteIndex < packet.Length; noteIndex++)
@@ -52,10 +56,18 @@ namespace Synthic.Providers.Synth
                     ref MidiNote note = ref packet[noteIndex];
                     ref NoteState state = ref noteStates[note.NoteIndex];
                     state.Signal = note.MidiSignal;
-                    if (note.MidiSignal == MidiNote.Signal.Off) continue;
+                    if (note.MidiSignal == MidiNote.Signal.Off)
+                    {
+                        state.ReleaseTime = state.Time;
+                        continue;
+                    }
 
+                    // if signal trigger is on, reset all state values
+                    state.Time = 0;
                     state.Phase = 0;
-                    state.Velocity = note.Velocity;
+                    state.ReleaseTime = 0;
+                    state.Signal = MidiNote.Signal.On;
+                    state.Velocity = note.Velocity / 255f;
                 }
 
                 // iterate over all notes to check signal
@@ -63,16 +75,18 @@ namespace Synthic.Providers.Synth
                 {
                     // check if state is on or off
                     ref NoteState state = ref noteStates[noteIndex];
-                    if (state.Signal == MidiNote.Signal.Off) continue;
-                    
+                    if (state.Signal == MidiNote.Signal.Off && state.Velocity <= 0) continue;
+
                     // process sample value for note
                     float value = (float) math.sin(state.Phase * 2 * math.PI);
-                    
-                    // advance note phase
+
+                    // advance note time and phase
+                    state.Time += sampleTime;
                     state.Phase += Frequency.ConvertFromMidi((byte) noteIndex) / sampleRate;
-                    
+                    state.Phase %= 1;
+
                     // apply note value to total sample calculation
-                    sampleValue += value * state.VelocityFloat * amplitude;
+                    sampleValue += value * adsr.ProcessEnvelope(in state) * amplitude;
                 }
 
                 for (int channel = 0; channel < synthBuffer.Channels; channel++)

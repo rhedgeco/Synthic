@@ -1,6 +1,6 @@
 using Unity.Mathematics;
 
-namespace Synthic.Providers.Midi
+namespace Synthic.Data
 {
     public static class Frequency
     {

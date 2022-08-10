@@ -373,6 +373,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   midiProvider: {fileID: 389247805}
   amplitude: 0.5
+  adsr:
+    attack: 0.01
+    decay: 0
+    sustain: 1
+    release: 0.01
 --- !u!4 &1230133469
 Transform:
   m_ObjectHideFlags: 0
