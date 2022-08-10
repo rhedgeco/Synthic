@@ -374,10 +374,13 @@ MonoBehaviour:
   midiProvider: {fileID: 389247805}
   amplitude: 0.5
   adsr:
-    attack: 0.01
+    attack: 0.05
+    attackPower: 1
     decay: 0
+    decayPower: 1
     sustain: 1
-    release: 0.01
+    release: 0.005
+    releasePower: 1
 --- !u!4 &1230133469
 Transform:
   m_ObjectHideFlags: 0
