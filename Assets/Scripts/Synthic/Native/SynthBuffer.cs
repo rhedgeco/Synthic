@@ -32,7 +32,6 @@ namespace Synthic.Native
         public void CopyTo(float[] managedArray) => _buffer.CopyTo(managedArray);
         public void CopyTo(ref SynthBuffer buffer) => _buffer.CopyTo(buffer._buffer);
 
-
         void INativeObject.ReleaseResources() => _buffer.Dispose();
     }
 }
