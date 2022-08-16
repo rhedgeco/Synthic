@@ -9,6 +9,8 @@ namespace Synthic.Providers.Midi
     {
         private readonly object _notesLock = new object();
         private readonly List<MidiNote> _notes = new List<MidiNote>();
+        private bool _clearBuffer = false;
+        private int _localCount = 0;
 
         private void Awake()
         {
@@ -21,12 +23,20 @@ namespace Synthic.Providers.Midi
 
                 midiDevice.onWillNoteOn += (note, velocity) =>
                 {
-                    lock (_notesLock) _notes.Add(MidiNote.On((byte) note.noteNumber, (byte) (127 * velocity)));
+                    lock (_notesLock)
+                    {
+                        _notes.Add(MidiNote.On((byte) note.noteNumber, (byte) (127 * velocity)));
+                        _localCount++;
+                    }
                 };
 
                 midiDevice.onWillNoteOff += note =>
                 {
-                    lock (_notesLock) _notes.Add(MidiNote.Off((byte) note.noteNumber));
+                    lock (_notesLock)
+                    {
+                        _notes.Add(MidiNote.Off((byte) note.noteNumber));
+                        _localCount++;
+                    }
                 };
             };
         }
@@ -35,12 +45,20 @@ namespace Synthic.Providers.Midi
         {
             lock (_notesLock)
             {
-                buffer.Clear();
-                for (int sample = 0; sample < buffer.Length; sample++)
+                if (_clearBuffer)
                 {
-                    if (_notes.Count == 0) continue;
+                    buffer.Clear();
+                    _clearBuffer = false;
+                }
+
+                int bufferLength = buffer.Length;
+                for (int sample = 0; sample < bufferLength; sample++)
+                {
+                    if (_localCount == 0) continue;
                     buffer.SetPacket(sample, _notes.ToArray());
                     _notes.Clear();
+                    _localCount = 0;
+                    _clearBuffer = true;
                 }
             }
         }
