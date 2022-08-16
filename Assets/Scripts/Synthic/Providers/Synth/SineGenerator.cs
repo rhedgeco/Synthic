@@ -42,51 +42,33 @@ namespace Synthic.Providers.Synth
         private static void BurstSine(ref SynthBuffer synthBuffer, ref MidiBuffer midiBuffer,
             ref DataBuffer<NoteState> noteStates, ref Adsr adsr, float amplitude, int sampleRate)
         {
-            double sampleTime = 1.0 / sampleRate;
-            
-            // loop over each sample
-            for (int sample = 0; sample < synthBuffer.ChannelLength; sample++)
+            float sampleTime = 1f / sampleRate;
+
+            // loop over every sample
+            int channelLength = synthBuffer.ChannelLength;
+            for (int sample = 0; sample < channelLength; sample++)
             {
                 float sampleValue = 0;
 
-                // update note states for this iteration
+                // turn on and off necessary notes
                 MidiPacket packet = midiBuffer.GetPacket(sample);
-                for (int noteIndex = 0; packet.Allocated & noteIndex < packet.Length; noteIndex++)
+                for (int nodeIndex = 0; packet.Allocated & nodeIndex < packet.Length; nodeIndex++)
                 {
-                    ref MidiNote note = ref packet[noteIndex];
+                    ref MidiNote note = ref packet[nodeIndex];
                     ref NoteState state = ref noteStates[note.NoteIndex];
-                    state.Signal = note.MidiSignal;
-                    if (note.MidiSignal == MidiNote.Signal.Off)
-                    {
-                        state.ReleaseTime = state.Time;
-                        continue;
-                    }
-
-                    // if signal trigger is on, reset all state values
-                    state.Time = 0;
-                    state.Phase = 0;
-                    state.ReleaseTime = 0;
-                    state.Signal = MidiNote.Signal.On;
-                    state.Velocity = note.Velocity / 255f;
+                    if (note.MidiSignal == MidiNote.Signal.On) state.TurnOn(0, note.Velocity / 255f, in adsr);
+                    else state.TurnOff();
                 }
 
-                // iterate over all notes to check signal
+                // calculate waveform as combination of all waves
                 for (int noteIndex = 0; noteIndex < noteStates.Length; noteIndex++)
                 {
-                    // check if state is on or off
                     ref NoteState state = ref noteStates[noteIndex];
-                    if (state.Signal == MidiNote.Signal.Off && state.Velocity <= 0) continue;
+                    if (state.NetVelocity == 0 && state.Signal == MidiNote.Signal.Off) continue;
 
-                    // process sample value for note
-                    float value = (float) math.sin(state.Phase * 2 * math.PI);
+                    sampleValue += (float) math.sin(state.Phase * 2 * math.PI) * state.NetVelocity * amplitude;
 
-                    // advance note time and phase
-                    state.Time += sampleTime;
-                    state.Phase += Frequency.ConvertFromMidi((byte) noteIndex) / sampleRate;
-                    state.Phase %= 1;
-
-                    // apply note value to total sample calculation
-                    sampleValue += value * adsr.ProcessEnvelope(in state) * amplitude;
+                    state.Advance(sampleTime, Frequency.ConvertFromMidi((byte) noteIndex) / sampleRate);
                 }
 
                 for (int channel = 0; channel < synthBuffer.Channels; channel++)

@@ -1,34 +1,22 @@
 using System.Collections.Generic;
-using Minis;
 using Synthic.Native.Midi;
+using UnityEngine;
 using UnityEngine.InputSystem;
 
 namespace Synthic.Providers.Midi
 {
-    public class MidiTester : MidiProvider
+    public class KeyboardMidi : MidiProvider
     {
+        [SerializeField] private InputAction noteAction;
+        
         private readonly object _notesLock = new object();
         private readonly List<MidiNote> _notes = new List<MidiNote>();
 
         private void Awake()
         {
-            InputSystem.onDeviceChange += (device, change) =>
-            {
-                if (change != InputDeviceChange.Added) return;
-
-                MidiDevice midiDevice = device as MidiDevice;
-                if (midiDevice == null) return;
-
-                midiDevice.onWillNoteOn += (note, velocity) =>
-                {
-                    lock (_notesLock) _notes.Add(MidiNote.On((byte) note.noteNumber, (byte) (127 * velocity)));
-                };
-
-                midiDevice.onWillNoteOff += note =>
-                {
-                    lock (_notesLock) _notes.Add(MidiNote.Off((byte) note.noteNumber));
-                };
-            };
+            noteAction.Enable();
+            noteAction.started += context => { lock (_notesLock) { _notes.Add(MidiNote.On(64, 255)); } };
+            noteAction.canceled += context => { lock (_notesLock) { _notes.Add(MidiNote.Off(64)); } };
         }
 
         protected override void ProcessBuffer(ref MidiBuffer buffer)

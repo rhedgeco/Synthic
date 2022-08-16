@@ -1,52 +1,53 @@
 using System.Runtime.InteropServices;
-using Unity.Burst;
 
 namespace Synthic.Native.Midi
 {
-    [BurstCompile]
     [StructLayout(LayoutKind.Sequential)]
     public struct MidiBuffer : INativeObject
     {
-        private BufferHandler<MidiPacket> _buffer;
+        private BufferHandler<MidiPacket> _packets;
 
-        public int Length => _buffer.Length;
-        public bool Allocated => _buffer.Allocated;
+        public int Length => _packets.Length;
+        public bool Allocated => _packets.Allocated;
 
         public static NativeBox<MidiBuffer> Construct(int bufferLength)
         {
-            MidiBuffer buffer = new MidiBuffer {_buffer = new BufferHandler<MidiPacket>(bufferLength)};
+            MidiBuffer buffer = new MidiBuffer {_packets = new BufferHandler<MidiPacket>(bufferLength)};
             return new NativeBox<MidiBuffer>(buffer);
         }
 
-        public void ApplyPacket(int index, MidiNote[] notes)
+        public void SetPacket(int index, MidiNote[] notes)
         {
-            _buffer[index].Allocate(notes);
+            ref MidiPacket packet = ref _packets[index];
+            if (packet.Allocated) packet.Dispose();
+            _packets[index] = new MidiPacket(notes);
         }
 
-        public MidiPacket GetPacket(int index)
+        public ref MidiPacket GetPacket(int index)
         {
-            return _buffer[index];
+            return ref _packets[index];
         }
 
         public void Clear()
         {
-            for (int packetIndex = 0; packetIndex < _buffer.Length; packetIndex++)
+            for (int i = 0; i < _packets.Length; i++)
             {
-                ref MidiPacket packet = ref _buffer[packetIndex];
+                ref MidiPacket packet = ref _packets[i];
                 if (!packet.Allocated) continue;
-                packet.Clear();
+                packet.Dispose();
             }
         }
 
         void INativeObject.ReleaseResources()
         {
-            for (int packetIndex = 0; packetIndex < _buffer.Length; packetIndex++)
+            for (int i = 0; i < _packets.Length; i++)
             {
-                ref MidiPacket packet = ref _buffer[packetIndex];
+                ref MidiPacket packet = ref _packets[i];
                 if (!packet.Allocated) continue;
-                ((INativeObject) packet).ReleaseResources();
+                packet.Dispose();
             }
-            _buffer.Dispose();
+
+            _packets.Dispose();
         }
     }
 }

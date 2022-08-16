@@ -3,19 +3,20 @@ using System.Runtime.InteropServices;
 namespace Synthic.Native.Midi
 {
     [StructLayout(LayoutKind.Sequential)]
-    public struct MidiPacket : INativeObject
+    public struct MidiPacket
     {
-        private BufferHandler<MidiNote> _buffer;
+        private BufferHandler<MidiNote> _notes;
 
-        public int Length => _buffer.Length;
-        public bool Allocated => _buffer.Allocated;
+        public int Length => _notes.Length;
+        public bool Allocated => _notes.Allocated;
 
-        internal void Allocate(MidiNote[] packet) => _buffer = new BufferHandler<MidiNote>(packet);
+        internal MidiPacket(MidiNote[] notes)
+        {
+            _notes = new BufferHandler<MidiNote>(notes);
+        }
 
-        public ref MidiNote this[int index] => ref _buffer[index];
+        public ref MidiNote this[int index] => ref _notes[index];
 
-        public void Clear() => _buffer.Clear();
-
-        void INativeObject.ReleaseResources() => _buffer.Dispose();
+        internal void Dispose() => _notes.Dispose();
     }
 }
