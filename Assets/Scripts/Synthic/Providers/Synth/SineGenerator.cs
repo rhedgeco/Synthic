@@ -2,6 +2,7 @@ using Synthic.Data;
 using Synthic.Native;
 using Synthic.Native.Core;
 using Synthic.Native.Midi;
+using Synthic.Native.Synth;
 using Synthic.Providers.Midi;
 using Unity.Burst;
 using Unity.Mathematics;
@@ -45,26 +46,31 @@ namespace Synthic.Providers.Synth
         {
             float sampleTime = 1f / sampleRate;
 
-            // loop over every sample
-            int channelLength = synthBuffer.ChannelLength;
-            for (int sample = 0; sample < channelLength; sample++)
+            BufferRefIterator<StereoData> sampleIterator = synthBuffer.GetIterator();
+            BufferRefIterator<MidiPacket> packetIterator = midiBuffer.GetIterator();
+            while (sampleIterator.MoveNext() && packetIterator.MoveNext())
             {
                 float sampleValue = 0;
+                ref StereoData samples = ref sampleIterator.Current;
+                ref MidiPacket packet = ref packetIterator.Current;
 
-                // turn on and off necessary notes
-                MidiPacket packet = midiBuffer.GetPacket(sample);
-                for (int nodeIndex = 0; packet.Allocated & nodeIndex < packet.Length; nodeIndex++)
+                if (packet.Allocated)
                 {
-                    ref MidiNote note = ref packet[nodeIndex];
-                    ref NoteState state = ref noteStates[note.NoteIndex];
-                    if (note.MidiSignal == MidiNote.Signal.On) state.TurnOn(0, note.Velocity / 255f, in adsr);
-                    else state.TurnOff();
+                    BufferRefIterator<MidiNote> midiNoteIterator = packet.GetIterator();
+                    while (midiNoteIterator.MoveNext())
+                    {
+                        ref MidiNote note = ref midiNoteIterator.Current;
+                        ref NoteState state = ref noteStates[note.NoteIndex];
+                        if (note.MidiSignal == MidiNote.Signal.On) state.TurnOn(0, note.Velocity / 255f, in adsr);
+                        else state.TurnOff();
+                    }
                 }
 
-                // calculate waveform as combination of all waves
-                for (int noteIndex = 0; noteIndex < noteStates.Length; noteIndex++)
+                BufferRefIterator<NoteState> noteStateIterator = noteStates.GetIterator();
+                while (noteStateIterator.MoveNext())
                 {
-                    ref NoteState state = ref noteStates[noteIndex];
+                    int noteIndex = noteStateIterator.CurrentIndex;
+                    ref NoteState state = ref noteStateIterator.Current;
                     if (state.NetVelocity == 0 && state.Signal == MidiNote.Signal.Off) continue;
 
                     sampleValue += (float) math.sin(state.Phase * 2 * math.PI) * state.NetVelocity * amplitude;
@@ -72,10 +78,7 @@ namespace Synthic.Providers.Synth
                     state.Advance(sampleTime, Frequency.ConvertFromMidi((byte) noteIndex) / sampleRate);
                 }
 
-                for (int channel = 0; channel < synthBuffer.Channels; channel++)
-                {
-                    synthBuffer[sample * synthBuffer.Channels + channel] = sampleValue;
-                }
+                samples.SetBoth(sampleValue);
             }
         }
     }

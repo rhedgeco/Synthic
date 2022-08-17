@@ -17,6 +17,7 @@ namespace Synthic.Native.Midi
         }
 
         public ref MidiNote this[int index] => ref _notes[index];
+        public BufferRefIterator<MidiNote> GetIterator() => new BufferRefIterator<MidiNote>(ref _notes);
 
         internal void Dispose() => _notes.Dispose();
     }

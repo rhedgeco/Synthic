@@ -28,6 +28,8 @@ namespace Synthic.Native.Midi
         {
             return ref _packets[index];
         }
+        
+        public BufferRefIterator<MidiPacket> GetIterator() => new BufferRefIterator<MidiPacket>(ref _packets);
 
         public void Clear()
         {

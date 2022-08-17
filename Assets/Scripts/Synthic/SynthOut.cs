@@ -9,7 +9,13 @@ namespace Synthic
 
         private void OnAudioFilterRead(float[] data, int channels)
         {
-            provider.FillBuffer(data, channels);
+            if (channels != 2)
+            {
+                Debug.LogError("Synthic only supports STEREO output. Please switch your audio setting to STEREO.");
+                return;
+            }
+            
+            provider.FillBuffer(data);
         }
     }
 }

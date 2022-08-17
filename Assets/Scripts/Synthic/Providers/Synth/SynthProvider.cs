@@ -1,5 +1,6 @@
 using Synthic.Native;
 using Synthic.Native.Core;
+using Synthic.Native.Synth;
 using UnityEngine;
 
 namespace Synthic.Providers.Synth
@@ -8,9 +9,9 @@ namespace Synthic.Providers.Synth
     {
         private NativeBox<SynthBuffer> _buffer;
 
-        public void FillBuffer(float[] buffer, int channels)
+        public void FillBuffer(float[] buffer)
         {
-            ValidateBuffer(buffer.Length, channels);
+            ValidateBuffer(buffer.Length);
             ProcessBuffer(ref _buffer.Data);
             _buffer.Data.CopyTo(buffer);
         }
@@ -19,20 +20,20 @@ namespace Synthic.Providers.Synth
         public void FillBuffer(ref SynthBuffer buffer)
         {
             if (!buffer.Allocated) return;
-            ValidateBuffer(buffer.Length, buffer.Channels);
+            ValidateBuffer(buffer.Length);
             ProcessBuffer(ref _buffer.Data);
             _buffer.Data.CopyTo(ref buffer);
         }
         
-        private void ValidateBuffer(int bufferLength, int channels)
+        private void ValidateBuffer(int bufferLength)
         {
             if (!(_buffer is {Allocated: true})) 
-                _buffer = SynthBuffer.Construct(bufferLength, channels);
+                _buffer = SynthBuffer.Construct(bufferLength);
 
             ref SynthBuffer buffer = ref _buffer.Data;
-            if (buffer.Length == bufferLength && buffer.Channels == channels) return;
+            if (buffer.Length == bufferLength) return;
             if (buffer.Allocated) _buffer.Dispose();
-            _buffer = SynthBuffer.Construct(bufferLength, channels);
+            _buffer = SynthBuffer.Construct(bufferLength);
         }
         
         // override for creating custom providers
