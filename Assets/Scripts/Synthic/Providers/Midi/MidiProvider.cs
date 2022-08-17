@@ -1,4 +1,5 @@
 using Synthic.Native;
+using Synthic.Native.Core;
 using Synthic.Native.Midi;
 using UnityEngine;
 

@@ -1,6 +1,6 @@
 using System;
 
-namespace Synthic.Native
+namespace Synthic.Native.Core
 {
     public class NativeBox<T> : IDisposable where T : INativeObject
     {

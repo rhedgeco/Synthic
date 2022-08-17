@@ -1,4 +1,3 @@
-using Synthic.Native.Midi;
 using Unity.Mathematics;
 using UnityEngine;
 

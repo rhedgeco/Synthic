@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using Synthic.Native.Core;
 
 namespace Synthic.Native
 {

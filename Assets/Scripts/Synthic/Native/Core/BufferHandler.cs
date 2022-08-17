@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 
-namespace Synthic.Native
+namespace Synthic.Native.Core
 {
     [StructLayout(LayoutKind.Sequential)]
     internal unsafe struct BufferHandler<T> : IDisposable where T : unmanaged

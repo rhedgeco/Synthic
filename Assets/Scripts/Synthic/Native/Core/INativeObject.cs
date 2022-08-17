@@ -1,4 +1,4 @@
-namespace Synthic.Native
+namespace Synthic.Native.Core
 {
     public interface INativeObject
     {

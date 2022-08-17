@@ -1,5 +1,6 @@
 using Synthic.Data;
 using Synthic.Native;
+using Synthic.Native.Core;
 using Synthic.Native.Midi;
 using Synthic.Providers.Midi;
 using Unity.Burst;
