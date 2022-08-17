@@ -14,6 +14,7 @@ namespace Synthic.Providers.Synth
     public class SineGenerator : SynthProvider
     {
         [SerializeField] private MidiProvider midiProvider;
+        [SerializeField] private Wave.Shape waveShape;
         [SerializeField, Range(0, 1)] private float amplitude;
         [SerializeField] private Adsr adsr;
 
@@ -34,15 +35,15 @@ namespace Synthic.Providers.Synth
         protected override void ProcessBuffer(ref SynthBuffer buffer)
         {
             ref MidiBuffer midiBuffer = ref midiProvider.ReadBuffer(buffer.ChannelLength);
-            _burstSine(ref buffer, ref midiBuffer, ref _noteStates.Data, ref adsr, amplitude, _sampleRate);
+            _burstSine(ref buffer, ref midiBuffer, ref _noteStates.Data, ref adsr, waveShape, amplitude, _sampleRate);
         }
 
         private delegate void BurstSineDelegate(ref SynthBuffer synthBuffer, ref MidiBuffer midiBuffer,
-            ref DataBuffer<NoteState> noteStates, ref Adsr adsr, float amplitude, int sampleRate);
+            ref DataBuffer<NoteState> noteStates, ref Adsr adsr, Wave.Shape waveShape, float amplitude, int sampleRate);
 
         [BurstCompile]
         private static void BurstSine(ref SynthBuffer synthBuffer, ref MidiBuffer midiBuffer,
-            ref DataBuffer<NoteState> noteStates, ref Adsr adsr, float amplitude, int sampleRate)
+            ref DataBuffer<NoteState> noteStates, ref Adsr adsr, Wave.Shape waveShape, float amplitude, int sampleRate)
         {
             float sampleTime = 1f / sampleRate;
 
@@ -73,7 +74,7 @@ namespace Synthic.Providers.Synth
                     ref NoteState state = ref noteStateIterator.Current;
                     if (state.NetVelocity == 0 && state.Signal == MidiNote.Signal.Off) continue;
 
-                    sampleValue += (float) math.sin(state.Phase * 2 * math.PI) * state.NetVelocity * amplitude;
+                    sampleValue += Wave.ProcessWave(waveShape, state.Phase) * state.NetVelocity * amplitude;
 
                     state.Advance(sampleTime, Frequency.ConvertFromMidi((byte) noteIndex) / sampleRate);
                 }
