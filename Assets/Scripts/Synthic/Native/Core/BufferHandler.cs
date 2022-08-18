@@ -16,7 +16,7 @@ namespace Synthic.Native.Core
         {
             Length = length;
             Pointer = (T*) UnsafeUtility.Malloc(Length * sizeof(T), UnsafeUtility.AlignOf<T>(), Allocator.Persistent);
-            Clear();
+            UnsafeUtility.MemClear(Pointer, (long) Length * UnsafeUtility.SizeOf<T>());
         }
 
         public BufferHandler(T[] managedArray)
@@ -72,9 +72,6 @@ namespace Synthic.Native.Core
                 throw new IndexOutOfRangeException($"index:{index} out of range:0-{Length}");
         }
 
-        public void Clear()
-        {
-            UnsafeUtility.MemClear(Pointer, (long) Length * UnsafeUtility.SizeOf<T>());
-        }
+        public BufferRefIterator<T> GetIterator() => new BufferRefIterator<T>(ref this);
     }
 }

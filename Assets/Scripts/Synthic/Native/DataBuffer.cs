@@ -21,7 +21,7 @@ namespace Synthic.Native
 
         public void CopyTo(T[] managedArray) => _buffer.CopyTo(managedArray);
         public void CopyTo(ref DataBuffer<T> buffer) => _buffer.CopyTo(buffer._buffer);
-        public BufferRefIterator<T> GetIterator() => new BufferRefIterator<T>(ref _buffer);
+        public BufferRefIterator<T> GetIterator() => _buffer.GetIterator();
 
         void INativeObject.ReleaseResources() => _buffer.Dispose();
     }

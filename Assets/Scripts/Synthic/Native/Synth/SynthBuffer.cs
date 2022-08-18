@@ -40,7 +40,7 @@ namespace Synthic.Native.Synth
         }
 
         public void CopyTo(ref SynthBuffer buffer) => _buffer.CopyTo(buffer._buffer);
-        public BufferRefIterator<StereoData> GetIterator() => new BufferRefIterator<StereoData>(ref _buffer);
+        public BufferRefIterator<StereoData> GetIterator() => _buffer.GetIterator();
 
         void INativeObject.ReleaseResources() => _buffer.Dispose();
     }
