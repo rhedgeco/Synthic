@@ -24,11 +24,6 @@ namespace Synthic.Native.Midi
             _buffer[index] = new MidiPacket(notes);
         }
 
-        public ref MidiPacket GetPacket(int index)
-        {
-            return ref _buffer[index];
-        }
-
         public BufferRefIterator<MidiPacket> GetIterator() => _buffer.GetIterator();
 
         public void Clear()
@@ -43,13 +38,7 @@ namespace Synthic.Native.Midi
 
         void INativeObject.ReleaseResources()
         {
-            for (int i = 0; i < _buffer.Length; i++)
-            {
-                ref MidiPacket packet = ref _buffer[i];
-                if (!packet.Allocated) continue;
-                packet.Dispose();
-            }
-
+            Clear();
             _buffer.Dispose();
         }
     }
