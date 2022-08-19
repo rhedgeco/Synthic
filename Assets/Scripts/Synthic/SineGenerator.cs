@@ -19,7 +19,7 @@ namespace Synthic
     
         private void Awake()
         {
-            _sampleRate = AudioSettings.GetConfiguration().sampleRate;
+            _sampleRate = AudioSettings.outputSampleRate;
             if (_burstSine != null) return;
             _burstSine = BurstCompiler.CompileFunctionPointer<BurstSineDelegate>(BurstSine).Invoke;
         }
