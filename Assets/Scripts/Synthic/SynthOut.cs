@@ -13,6 +13,8 @@ namespace Synthic
                 Debug.LogError("Synthic only works with unity STEREO output mode.");
                 return;
             }
+
+            if (provider == null) return;
             provider.FillBuffer(data);
         }
     }
