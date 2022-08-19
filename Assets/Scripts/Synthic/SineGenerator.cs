@@ -1,4 +1,5 @@
-using Synthic.Native;
+using Synthic.Native.Buffers;
+using Synthic.Native.Data;
 using Unity.Burst;
 using Unity.Mathematics;
 using UnityEngine;
@@ -37,22 +38,16 @@ namespace Synthic
         {
             // calculate how much the phase should change after each sample
             double phaseIncrement = frequency / sampleRate;
-
-            for (int sample = 0; sample < buffer.Length; sample += buffer.Channels)
+            
+            for (int sample = 0; sample < buffer.Length; sample++)
             {
-                // get value of phase on a sine wave
-                float value = (float) (math.sin(phase * 2 * math.PI) * amplitude);
-        
+                // calculate and set buffer sample
+                buffer[sample] = new StereoData((float) (math.sin(phase * 2 * math.PI) * amplitude));
+                
                 // increment _phase value for next iteration
                 phase = (phase + phaseIncrement) % 1;
-    
-                // populate all channels with the values
-                for (int channel = 0; channel < buffer.Channels; channel++)
-                {
-                    buffer[sample + channel] = value;
-                }
             }
-    
+
             // return the updated phase
             return phase;
         }

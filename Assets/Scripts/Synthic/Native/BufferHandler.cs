@@ -8,15 +8,15 @@ namespace Synthic.Native
     [StructLayout(LayoutKind.Sequential)]
     internal unsafe struct BufferHandler<T> : IDisposable where T : unmanaged
     {
-        public int Length { get; private set; }
+        public int Length { get; }
         public T* Pointer { get; private set; }
         public bool Allocated => (IntPtr) Pointer != IntPtr.Zero;
 
         public BufferHandler(int length)
         {
             Length = length;
-            Pointer = (T*) UnsafeUtility.Malloc(Length * sizeof(T),
-                UnsafeUtility.AlignOf<T>(), Allocator.Persistent);
+            Pointer = (T*) UnsafeUtility.Malloc(Length * sizeof(T), UnsafeUtility.AlignOf<T>(), Allocator.Persistent);
+            UnsafeUtility.MemClear(Pointer, Length * sizeof(T));
         }
         
         public void Dispose()
@@ -24,15 +24,6 @@ namespace Synthic.Native
             if (!Allocated) return;
             UnsafeUtility.Free(Pointer, Allocator.Persistent);
             Pointer = (T*) IntPtr.Zero;
-        }
-
-        public void CopyTo(T[] managedArray)
-        {
-            if (!Allocated) throw new ObjectDisposedException("Cannot copy. Buffer has been disposed");
-            int length = Math.Min(managedArray.Length, Length);
-            GCHandle gcHandle = GCHandle.Alloc(managedArray, GCHandleType.Pinned);
-            UnsafeUtility.MemCpy((void*) gcHandle.AddrOfPinnedObject(), Pointer, length * sizeof(T));
-            gcHandle.Free();
         }
 
         public void CopyTo(BufferHandler<T> buffer)

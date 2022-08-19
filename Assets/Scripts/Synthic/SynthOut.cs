@@ -8,7 +8,12 @@ namespace Synthic
 
         private void OnAudioFilterRead(float[] data, int channels)
         {
-            provider.FillBuffer(data, channels);
+            if (channels != 2)
+            {
+                Debug.LogError("Synthic only works with unity STEREO output mode.");
+                return;
+            }
+            provider.FillBuffer(data);
         }
     }
 }
