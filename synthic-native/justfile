@@ -1,0 +1,17 @@
+default:
+    just --list
+
+[linux]
+dev:
+    cargo build --release
+    python3 scripts/reload-dev-lib.py linux
+
+[windows]
+dev:
+    cargo build --release
+    python3 scripts/reload-dev-lib.py windows
+
+build:
+    cross build --release --target x86_64-unknown-linux-gnu
+    cross build --release --target x86_64-pc-windows-gnu
+    python3 scripts/load-build-libs.py
