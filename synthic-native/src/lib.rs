@@ -4,4 +4,4 @@ pub mod oscillator;
 
 pub use buffer::Buffer;
 pub use notes::Notes;
-pub use oscillator::Oscillator;
+pub use oscillator::SimpleOscillator;

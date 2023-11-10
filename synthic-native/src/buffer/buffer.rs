@@ -15,6 +15,12 @@ impl Drop for Buffer {
     }
 }
 
+/// Untyped raw data storage used for working with data across FFI boundaries.
+///
+/// Buffers are constructed with manual layouts and will never know any information about
+/// what is being stored inside. This is unfortunate as it will never be able to call the drop
+/// function on the "contained" items, but it allows it to fit into a niche of storing data
+/// that is defined in other languages and passed via FFI.
 #[derive(Debug)]
 pub struct Buffer {
     item_layout: Layout,
@@ -23,6 +29,7 @@ pub struct Buffer {
 }
 
 impl Buffer {
+    /// Returns a new buffer with a specific `item_layout` and `buffer_size`
     pub fn new(item_layout: Layout, buffer_size: usize) -> Self {
         match NonZeroUsize::new(buffer_size) {
             None => Self {
@@ -48,31 +55,44 @@ impl Buffer {
         }
     }
 
+    /// Re-allocates the buffer in place with a new size.
+    ///
+    /// Erases the old data that was contained in the first place.
     pub fn rebuild(&mut self, size: usize) {
         *self = Self::new(self.item_layout, size);
     }
 
+    /// Get a raw ptr to the start of the buffer
     pub fn ptr(&self) -> *mut u8 {
         self.data.as_ptr()
     }
 
+    /// Returns the amount of items the buffer can contain
     pub fn size(&self) -> usize {
         self.size
     }
 
+    /// Returns the layout of the contained items
     pub fn item_layout(&self) -> Layout {
         self.item_layout
     }
 
+    /// Returns the layout of the entire buffer
     pub fn array_layout(&self) -> Layout {
         let array_size = self.item_layout.size() * self.size;
         unsafe { Layout::from_size_align_unchecked(array_size, self.item_layout.align()) }
     }
 
+    /// Reinterprets the buffer into a [`TypedBuffer`] as long as the layout matches.
+    ///
+    /// Returns `None` if the layout of `T` does not match the `item_layout`
     pub fn interpret_as<T>(&self) -> Option<TypedBuffer<T>> {
         TypedBuffer::interpret(self)
     }
 
+    /// Gets the ptr at the specified buffer `index`
+    ///
+    /// Returns `None` if the index is out of bounds
     pub fn get(&self, index: usize) -> Option<*mut u8> {
         if index >= self.size {
             return None;
@@ -86,6 +106,7 @@ impl Buffer {
         Some(unsafe { self.data.as_ptr().add(ptr_offset) })
     }
 
+    /// Returns an itertor over every pointer in the buffer
     pub fn iter(&self) -> Iter {
         Iter {
             size: self.size,
@@ -115,6 +136,7 @@ impl Buffer {
     }
 }
 
+/// Iterates over every ptr in a [`Buffer`]
 pub struct Iter<'a> {
     size: usize,
     ptr_delta: usize,
