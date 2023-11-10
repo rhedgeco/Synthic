@@ -1,8 +1,6 @@
-import random
 import shutil
 import pathlib
 import sys
-import argparse
 
 script_dir = pathlib.Path(__file__).parent.resolve()
 
